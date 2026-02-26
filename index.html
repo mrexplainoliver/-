@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>理財工具箱-完整呈現版</title>
+    <title>理財工具箱-最終版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f0f2f5; }
@@ -13,16 +13,27 @@
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; font-size: 14px; }
         input { width: 100%; padding: 10px; border: 1px solid #ccd1d1; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        input:focus { border-color: #3498db; outline: none; box-shadow: 0 0 5px rgba(52,152,219,0.3); }
-        .run-btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .run-btn:active { background: #1a252f; transform: scale(0.98); }
-        .res-card { margin-top: 12px; padding: 12px; border-radius: 8px; color: white; text-align: center; font-weight: bold; }
+        
+        /* 按鈕樣式 */
+        .run-btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .run-btn:active { transform: scale(0.98); background: #1a252f; }
+
+        /* 試算結果卡片 (藍/綠) */
+        .res-card { margin-top: 12px; padding: 12px; border-radius: 8px; color: white; text-align: center; font-size: 1.1rem; }
+        .res-val { display: block; font-size: 1.4rem; font-weight: bold; margin-top: 5px; }
+
+        /* 深色分析卡片樣式 */
         .power-card { background: #34495e; color: white; padding: 20px; border-radius: 12px; margin-top: 20px; }
-        .power-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .power-label { color: #bdc3c7; font-size: 0.9rem; margin-bottom: 5px; }
-        .power-val { color: #f1c40f; font-weight: bold; font-size: 1.25rem; display: block; }
-        .highlight { color: #e67e22; font-weight: bold; font-size: 1.2rem; }
+        .power-title { color: #f1c40f; font-weight: bold; border-bottom: 1px solid #5d6d7e; padding-bottom: 10px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; }
+        .power-item { margin-bottom: 15px; }
+        .power-label { color: #bdc3c7; font-size: 1rem; margin-bottom: 5px; }
+        .power-num { color: #f1c40f; font-weight: bold; font-size: 1.5rem; display: block; }
+
+        /* 通膨換算結果樣式 (修正字體不一) */
         #ires_box { display:none; margin-top:20px; text-align:center; padding:20px; border:2px dashed #27ae60; border-radius:10px; background: #f9fdf9; }
+        .desc-text { color: #2c3e50; font-size: 1.1rem; margin: 10px 0; }
+        .highlight-num { color: #e67e22; font-weight: bold; font-size: 1.5rem; }
+        
         hr { border: 0; border-top: 2px dashed #ccc; margin: 40px 0; }
     </style>
 </head>
@@ -33,7 +44,7 @@
         <div class="input-group"><label>初始本金 (萬元)</label><input type="number" id="p" value="100"></div>
         <div class="input-group"><label>每月存入 (元)</label><input type="number" id="m" value="10000"></div>
         <div class="input-group"><label>年報酬率 (%)</label><input type="number" id="r" value="8"></div>
-        <div class="input-group"><label>距離退休時間 (年)</label><input type="number" id="y" value="30"></div>
+        <div class="input-group"><label>距離退休 (年)</label><input type="number" id="y" value="30"></div>
         <div class="input-group" style="background: #fff3e0; padding: 10px; border-radius: 6px;"><label>預期年通膨率 (%)</label><input type="number" id="inf" value="3"></div>
         
         <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid var(--accent);">
@@ -43,20 +54,20 @@
 
         <button class="run-btn" onclick="calRet()">執行退休計算</button>
         
-        <div class="res-card" style="background:#3498db;">A.成長型資產 (名目)：<span id="oa">$ 0</span></div>
-        <div class="res-card" style="background:#27ae60;">B.防禦型資產 (名目)：<span id="ob">$ 0</span></div>
+        <div class="res-card" style="background:#3498db;">A.成長型資產 (名目總額)<span id="oa" class="res-val">$ 0</span></div>
+        <div class="res-card" style="background:#27ae60;">B.防禦型資產 (名目總額)<span id="ob" class="res-val">$ 0</span></div>
         
-        <div style="height:320px; margin: 20px 0;"><canvas id="chart"></canvas></div>
+        <div style="height:320px; margin: 25px 0;"><canvas id="chart"></canvas></div>
         
         <div class="power-card">
-            <div style="color:#f1c40f; font-weight:bold; border-bottom:1px solid #5d6d7e; padding-bottom:8px; margin-bottom:15px; text-align:center;">實質購買力分析 (換算成現在)</div>
+            <div class="power-title">實質購買力分析 (換算成現在)</div>
             <div class="power-item">
                 <div id="label_va" class="power-label">A 資產實質價值：</div>
-                <span id="va" class="power-val">$ 0</span>
+                <span id="va" class="power-num">$ 0</span>
             </div>
-            <div class="power-item" style="border:none;">
+            <div class="power-item" style="margin-bottom:0;">
                 <div id="label_vb" class="power-label">B 資產實質價值：</div>
-                <span id="vb" class="power-val">$ 0</span>
+                <span id="vb" class="power-num">$ 0</span>
             </div>
         </div>
     </div>
@@ -72,11 +83,13 @@
         <button class="run-btn" style="background:#27ae60;" onclick="calInf()">開始換算</button>
         
         <div id="ires_box">
-            <p id="timeSum" style="color:#7f8c8d; font-size:0.9rem;"></p>
-            <p style="font-size: 1.1rem; color: #2c3e50;">
-                預期退休時 <span id="resF" class="highlight"></span> 元 的生活費<br>
-                約等於現在 <span id="resP" class="highlight" style="font-size: 1.5rem;"></span> 元 的購買力
-            </p>
+            <p id="timeSum" style="color:#7f8c8d; font-size:1rem; margin-bottom:15px;"></p>
+            <div class="desc-text">
+                預期退休時 <span id="resF" class="highlight-num"></span> 元 的生活費
+            </div>
+            <div class="desc-text">
+                約等於現在 <span id="resP" class="highlight-num" style="font-size: 1.8rem; color: #d35400;"></span> 元 的購買力
+            </div>
         </div>
     </div>
 
@@ -124,8 +137,7 @@
                 { label: 'B防禦型', data: db, backgroundColor: '#27ae60', stack: 's' }
             ]},
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
+                responsive: true, maintainAspectRatio: false,
                 scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => v/10000 + '萬' } } }
             }
         });
@@ -137,16 +149,13 @@
         const fe = parseFloat(document.getElementById('fe').value);
         const ir = parseFloat(document.getElementById('ir').value) / 100;
         const n = ra - ca;
-
         if(n <= 0) { alert("退休年齡需大於現在年齡"); return; }
         const pv = fe / Math.pow(1 + ir, n);
-
         document.getElementById('timeSum').innerText = `距離退休還有 ${n} 年 (預估通膨 ${ (ir*100).toFixed(1) }%)`;
         document.getElementById('resF').innerText = Math.round(fe).toLocaleString();
         document.getElementById('resP').innerText = Math.round(pv).toLocaleString();
         document.getElementById('ires_box').style.display = 'block';
     }
-
     window.onload = calRet;
 </script>
 </body>
