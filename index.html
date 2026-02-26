@@ -2,75 +2,72 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>理財工具箱 - 專業版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>理財工具箱-最終修復版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f4f7f6; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; }
-        .nav { display: flex; justify-content: center; background: var(--primary); position: sticky; top: 0; z-index: 100; }
-        .nav button { background: none; border: none; color: white; padding: 15px 20px; cursor: pointer; font-size: 16px; opacity: 0.7; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .nav { display: flex; justify-content: center; background: var(--primary); position: sticky; top: 0; z-index: 999; }
+        .nav button { color: white; border: none; padding: 15px; background: none; cursor: pointer; font-size: 16px; opacity: 0.6; flex: 1; }
         .nav button.active { opacity: 1; border-bottom: 3px solid #f1c40f; font-weight: bold; }
-        .tab-content { display: none; padding: 20px; max-width: 1000px; margin: auto; }
+        .tab-content { display: none; padding: 15px; max-width: 900px; margin: auto; }
         .tab-content.active { display: block; }
-        .wrapper { display: flex; flex-direction: column; gap: 20px; }
-        @media (min-width: 900px) { .wrapper { display: grid; grid-template-columns: 360px 1fr; } }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 14px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .highlight-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 5px solid #27ae60; }
-        .run-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-weight: bold; color: #555; font-size: 14px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .def-box { background: #e8f5e9; padding: 12px; border-radius: 8px; border-left: 5px solid var(--accent); margin: 10px 0; }
+        .run-btn { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
         .res-card { margin-top: 10px; padding: 12px; border-radius: 8px; color: white; text-align: center; }
-        .power-card { background: #34495e; color: white; padding: 20px; border-radius: 12px; margin-top: 15px; }
+        .power-card { background: #34495e; color: white; padding: 15px; border-radius: 10px; margin-top: 15px; }
         .power-val { color: #f1c40f; font-weight: bold; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <button onclick="openTab('retire', event)" class="active">📊 綜合退休試算</button>
-    <button onclick="openTab('inflation', event)">📉 通膨購買力換算</button>
+    <button onclick="sw('ret')" id="t1" class="active">📊 退休試算</button>
+    <button onclick="sw('inf')" id="t2">📉 通膨換算</button>
 </div>
 
-<div id="retire" class="tab-content active">
-    <div class="wrapper">
-        <div class="card">
-            <div class="input-group"><label>初始本金 (萬元)</label><input type="number" id="p_in" value="100"></div>
-            <div class="input-group"><label>每月存入 (元)</label><input type="number" id="m_in" value="10000"></div>
-            <div class="input-group"><label>報酬率 (%)</label><input type="number" id="r_in" value="8"></div>
-            <div class="input-group"><label>距離退休時間 (年)</label><input type="number" id="y_in" value="30"></div>
-            <div class="input-group"><label>預期年通膨率 (%)</label><input type="number" id="inf_in" value="3"></div>
-            
-            <div class="highlight-box">
-                <label>退休前幾年轉入防禦型</label><input type="number" id="def_y_in" value="5">
-                <label style="margin-top:10px;">每年轉移比例 (%)</label><input type="number" id="mov_p_in" value="5">
-            </div>
+<div id="ret" class="tab-content active">
+    <div class="card">
+        <div class="input-group"><label>初始本金 (萬元)</label><input type="number" id="p" value="100"></div>
+        <div class="input-group"><label>每月存入 (元)</label><input type="number" id="m" value="10000"></div>
+        <div class="input-group"><label>年報酬率 (%)</label><input type="number" id="r" value="8"></div>
+        <div class="input-group"><label>距離退休 (年)</label><input type="number" id="y" value="30"></div>
+        <div class="input-group" style="background:#fff3e0; padding:8px; border-radius:5px;"><label>預計年通膨 (%)</label><input type="number" id="inf" value="3"></div>
+        
+        <div class="def-box">
+            <label>退休前幾年開始轉入防禦型</label><input type="number" id="dy" value="5">
+            <label style="margin-top:8px;">每年轉移比例 (%)</label><input type="number" id="mp" value="5">
+        </div>
 
-            <button class="run-btn" onclick="doCalculate()">執行退休試算</button>
-            <div class="res-card" style="background:#3498db;">A.成長型：<span id="out_a">$ 0</span></div>
-            <div class="res-card" style="background:#27ae60;">B.防禦型：<span id="out_b">$ 0</span></div>
-        </div>
-        <div>
-            <div class="card" style="height:350px;"><canvas id="mainChart"></canvas></div>
-            <div class="power-card">
-                <div style="color:#f1c40f; margin-bottom:10px; border-bottom:1px solid #555;">實質購買力分析 (換算成現在)</div>
-                <div>A資產實質價值：<div id="txt_val_a" class="power-val">$ 0</div></div>
-                <div style="margin-top:10px;">B資產實質價值：<div id="txt_val_b" class="power-val">$ 0</div></div>
-            </div>
-        </div>
+        <button class="run-btn" onclick="calRet()">開始退休試算</button>
+        
+        <div class="res-card" style="background:#3498db;">A.成長型資產：<div id="oa" style="font-weight:bold;">$ 0</div></div>
+        <div class="res-card" style="background:#27ae60;">B.防禦型資產：<div id="ob" style="font-weight:bold;">$ 0</div></div>
+    </div>
+    
+    <div class="card" style="height:300px;"><canvas id="chart"></canvas></div>
+    
+    <div class="power-card">
+        <div style="color:#f1c40f; border-bottom:1px solid #555; padding-bottom:5px; margin-bottom:10px;">折現後的實質購買力</div>
+        <div>A資產現在價值：<span id="va" class="power-val">$ 0</span></div>
+        <div style="margin-top:8px;">B資產現在價值：<span id="vb" class="power-val">$ 0</span></div>
     </div>
 </div>
 
-<div id="inflation" class="tab-content">
-    <div class="card" style="max-width:500px; margin:auto;">
-        <div class="input-group"><label>現在年齡</label><input type="number" id="curA" value="35"></div>
-        <div class="input-group"><label>退休年齡</label><input type="number" id="retA" value="65"></div>
-        <div class="input-group"><label>通膨率 (%)</label><input type="number" id="infR" value="3"></div>
-        <div class="input-group"><label>預期退休月費 (元)</label><input type="number" id="futE" value="50000"></div>
-        <button class="run-btn" style="background:#27ae60;" onclick="calcInf()">開始換算</button>
-        <div id="inf_res_box" style="display:none; margin-top:20px; text-align:center; padding:15px; border:2px dashed #27ae60; border-radius:10px;">
-            <div id="resP_val" style="color:#e67e22; font-size:1.6rem; font-weight:bold;">$ 0</div>
+<div id="inf" class="tab-content">
+    <div class="card">
+        <div class="input-group"><label>現在年齡</label><input type="number" id="ca" value="35"></div>
+        <div class="input-group"><label>退休年齡</label><input type="number" id="ra" value="65"></div>
+        <div class="input-group"><label>預估年通膨 (%)</label><input type="number" id="ir" value="3"></div>
+        <div class="input-group"><label>退休月生活費 (元)</label><input type="number" id="fe" value="50000"></div>
+        <button class="run-btn" style="background:#27ae60;" onclick="calInf()">計算實質價值</button>
+        <div id="ires" style="display:none; margin-top:20px; text-align:center; padding:15px; border:2px dashed #27ae60; border-radius:10px;">
+            <div id="pv" style="color:#e67e22; font-size:1.6rem; font-weight:bold;">$ 0</div>
             <div style="color:#7f8c8d;">約等於現在的購買力</div>
         </div>
     </div>
@@ -79,80 +76,72 @@
 <script>
     let myChart = null;
 
-    function openTab(name, event) {
+    function sw(t) {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById(name).classList.add('active');
-        event.currentTarget.classList.add('active');
+        document.getElementById(t).classList.add('active');
+        if(t=='ret') document.getElementById('t1').classList.add('active');
+        else document.getElementById('t2').classList.add('active');
     }
 
-    function doCalculate() {
-        // 讀取輸入值
-        const p_start = (parseFloat(document.getElementById('p_in').value) || 0) * 10000; [cite: 119]
-        const m_save = parseFloat(document.getElementById('m_in').value) || 0; [cite: 119]
-        const r_a = (parseFloat(document.getElementById('r_in').value) || 0) / 100; [cite: 119]
-        const y_total = parseInt(document.getElementById('y_in').value) || 0; [cite: 119]
-        const inf_rate = (parseFloat(document.getElementById('inf_in').value) || 0) / 100; [cite: 119]
-        const d_years = parseInt(document.getElementById('def_y_in').value) || 0; [cite: 119]
-        const move_pct = (parseFloat(document.getElementById('mov_p_in').value) || 0) / 100; [cite: 119]
+    function calRet() {
+        const p = (parseFloat(document.getElementById('p').value) || 0) * 10000;
+        const m = parseFloat(document.getElementById('m').value) || 0;
+        const r = (parseFloat(document.getElementById('r').value) || 0) / 100;
+        const y = parseInt(document.getElementById('y').value) || 0;
+        const inf = (parseFloat(document.getElementById('inf').value) || 0) / 100;
+        const dy = parseInt(document.getElementById('dy').value) || 0;
+        const mp = (parseFloat(document.getElementById('mp').value) || 0) / 100;
 
-        let assetA = p_start, assetB = 0; [cite: 120]
-        let h_a = [Math.round(assetA)], h_b = [0], labels = ['起始']; [cite: 120]
+        let assetA = p, assetB = 0;
+        let la = ['起始'], da = [Math.round(p)], db = [0];
 
-        // 核心迴圈計算
-        for (let i = 1; i <= y_total; i++) {
-            assetA = (assetA + (m_save * 12)) * (1 + r_a); [cite: 121]
-            if (i > (y_total - d_years)) { [cite: 122]
-                let moveAmount = assetA * move_pct; [cite: 123]
-                assetA -= moveAmount; [cite: 123]
-                assetB += moveAmount; [cite: 123]
+        for (let i = 1; i <= y; i++) {
+            assetA = (assetA + m * 12) * (1 + r);
+            if (i > (y - dy)) {
+                let move = assetA * mp;
+                assetA -= move;
+                assetB += move;
             }
-            labels.push('第' + i + '年'); [cite: 124]
-            h_a.push(Math.round(assetA)); [cite: 124]
-            h_b.push(Math.round(assetB)); [cite: 124]
+            la.push('第' + i + '年');
+            da.push(Math.round(assetA));
+            db.push(Math.round(assetB));
         }
 
-        // 更新名目金額
-        document.getElementById('out_a').innerText = `$ ${Math.round(assetA).toLocaleString()}`; [cite: 127]
-        document.getElementById('out_b').innerText = `$ ${Math.round(assetB).toLocaleString()}`; [cite: 127]
+        document.getElementById('oa').innerText = '$ ' + Math.round(assetA).toLocaleString();
+        document.getElementById('ob').innerText = '$ ' + Math.round(assetB).toLocaleString();
         
-        // 計算並更新實質購買力 (折現)
-        const realA = assetA / Math.pow((1 + inf_rate), y_total); [cite: 128]
-        const realB = assetB / Math.pow((1 + inf_rate), y_total); [cite: 128]
-        document.getElementById('txt_val_a').innerText = `$ ${Math.round(realA).toLocaleString()}`; [cite: 129]
-        document.getElementById('txt_val_b').innerText = `$ ${Math.round(realB).toLocaleString()}`; [cite: 129]
+        const va = assetA / Math.pow(1 + inf, y);
+        const vb = assetB / Math.pow(1 + inf, y);
+        document.getElementById('va').innerText = '$ ' + Math.round(va).toLocaleString();
+        document.getElementById('vb').innerText = '$ ' + Math.round(vb).toLocaleString();
 
-        // 渲染圖表
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        if (myChart) myChart.destroy(); [cite: 131]
+        const ctx = document.getElementById('chart').getContext('2d');
+        if (myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: la,
                 datasets: [
-                    { label: 'A 成長型', data: h_a, backgroundColor: '#3498db', stack: 's1' }, [cite: 132]
-                    { label: 'B 防禦型', data: h_b, backgroundColor: '#27ae60', stack: 's1' } [cite: 132]
+                    { label: 'A 成長型', data: da, backgroundColor: '#3498db', stack: 's' },
+                    { label: 'B 防禦型', data: db, backgroundColor: '#27ae60', stack: 's' }
                 ]
             },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => v/10000 + '萬' } } } [cite: 133]
-            }
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
         });
     }
 
-    function calcInf() {
-        const n = parseFloat(document.getElementById('retA').value) - parseFloat(document.getElementById('curA').value); [cite: 158]
-        const f = parseFloat(document.getElementById('futE').value); [cite: 155]
-        const r = parseFloat(document.getElementById('infR').value) / 100; [cite: 155]
-        if (n <= 0) return alert("退休年齡需大於現在年齡"); [cite: 159]
-        const p = f / Math.pow(1 + r, n); [cite: 160]
-        document.getElementById('resP_val').innerText = '$ ' + Math.round(p).toLocaleString(); [cite: 161]
-        document.getElementById('inf_res_box').style.display = 'block'; [cite: 162]
+    function calInf() {
+        const n = parseFloat(document.getElementById('ra').value) - parseFloat(document.getElementById('ca').value);
+        const f = parseFloat(document.getElementById('fe').value);
+        const r = parseFloat(document.getElementById('ir').value) / 100;
+        if (n <= 0) return alert("退休年齡需大於現在年齡");
+        const p = f / Math.pow(1 + r, n);
+        document.getElementById('pv').innerText = '$ ' + Math.round(p).toLocaleString();
+        document.getElementById('ires').style.display = 'block';
     }
 
-    window.onload = doCalculate;
+    window.onload = calRet;
 </script>
 </body>
 </html>
