@@ -2,41 +2,27 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>理財工具箱 - 退休與通膨計算</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 整合導覽列樣式 */
-        :root {
-            --primary-color: #2c3e50;
-            --accent-color: #27ae60;
-            --bg-color: #f4f7f6;
-        }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; }
-        .nav-tabs { display: flex; justify-content: center; background: var(--primary-color); padding: 10px 0; position: sticky; top: 0; z-index: 1000; }
-        .nav-tabs button { background: none; border: none; color: white; padding: 10px 20px; cursor: pointer; font-size: 16px; transition: 0.3s; opacity: 0.7; }
+        :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .nav-tabs { display: flex; justify-content: center; background: var(--primary); padding: 5px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .nav-tabs button { background: none; border: none; color: white; padding: 12px 15px; cursor: pointer; font-size: 15px; transition: 0.3s; opacity: 0.6; }
         .nav-tabs button.active { opacity: 1; border-bottom: 3px solid #f1c40f; font-weight: bold; }
-        
-        .tab-content { display: none; padding: 20px; max-width: 1100px; margin: auto; }
+        .tab-content { display: none; padding: 15px; max-width: 1000px; margin: auto; }
         .tab-content.active { display: block; }
-
-        /* 繼承您原本的 CSS 邏輯 */
-        .wrapper { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); height: fit-content; }
-        h2 { color: var(--primary-color); text-align: center; margin-top: 0; border-bottom: 2px solid #3498db; padding-bottom: 10px; font-size: 1.3rem; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 14px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        .highlight-box { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid #27ae60; }
-        .inflation-box { background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #ff9800; }
-        button.main-btn { width: 100%; padding: 14px; background-color: var(--primary-color); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .res-card { margin-top: 12px; padding: 12px; border-radius: 8px; color: white; text-align: center; }
-        .bg-a { background-color: #3498db; }
-        .bg-b { background-color: #27ae60; }
-        .power-card { background: #34495e; color: white; padding: 20px; border-radius: 12px; margin-top: 20px;}
-        .power-title { color: #f1c40f; text-align: center; font-weight: bold; border-bottom: 1px solid #5d6d7e; padding-bottom: 10px; margin-bottom: 15px; }
-
-        @media (max-width: 900px) { .wrapper { grid-template-columns: 1fr; } }
+        .wrapper { display: flex; flex-direction: column; gap: 15px; }
+        @media (min-width: 900px) { .wrapper { display: grid; grid-template-columns: 350px 1fr; } }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-weight: bold; color: #555; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 10px 0; }
+        .res-card { margin-top: 10px; padding: 12px; border-radius: 8px; color: white; text-align: center; }
+        .power-card { background: #34495e; color: white; padding: 20px; border-radius: 12px; margin-top: 15px; }
+        .power-val { color: #f1c40f; font-weight: bold; font-size: 1.3rem; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -49,127 +35,12 @@
 <div id="retire" class="tab-content active">
     <div class="wrapper">
         <div class="card">
-            <h2>退休規劃-綜合</h2>
             <div class="input-group"><label>初始本金 (萬元)</label><input type="number" id="p_in" value="100"></div>
             <div class="input-group"><label>每月存入 (元)</label><input type="number" id="m_in" value="10000"></div>
-            <div class="input-group"><label>『A.成長型資產』年化報酬 (%)</label><input type="number" id="r_in" value="8" step="0.1"></div>
+            <div class="input-group"><label>年化報酬率 (%)</label><input type="number" id="r_in" value="8"></div>
             <div class="input-group"><label>距離退休時間 (年)</label><input type="number" id="y_in" value="30"></div>
-            <div class="inflation-box"><label>預期每年通膨率 (%)</label><input type="number" id="inf_in" value="3" step="0.1"></div>
-            <div class="highlight-box">
-                <label>退休前幾年轉入防禦型</label><input type="number" id="def_y_in" value="5">
-                <label style="margin-top:10px;">每年轉移比例 (%)</label><input type="number" id="mov_p_in" value="5">
-            </div>
-            <button class="main-btn" onclick="doCalculate()">執行退休試算</button>
-            <div class="res-card bg-a"><span>『A.成長型』 (名目)</span><strong id="out_a" style="display:block;">$ 0</strong></div>
-            <div class="res-card bg-b"><span>『B.防禦型』(名目)</span><strong id="out_b" style="display:block;">$ 0</strong></div>
+            <div class="input-group" style="background:#fff3e0; padding:10px; border-radius:5px;"><label>預期年通膨率 (%)</label><input type="number" id="inf_in" value="3"></div>
+            <button class="main-btn" onclick="doCalculate()">執行試算</button>
+            <div class="res-card" style="background:#3498db;">A.成長型資產：<div id="out_a">$ 0</div></div>
+            <div class="res-card" style="background:#27ae60;">B.防禦型資產：<div id="out_b">$ 0</div></div>
         </div>
-        <div>
-            <div class="card" style="min-height: 400px;"><canvas id="mainChart"></canvas></div>
-            <div class="power-card">
-                <div class="power-title">實質購買力分析 (換算成現在)</div>
-                <div id="txt_label_a" style="margin-bottom:10px;">A 成長型實質價值：</div>
-                <div id="txt_val_a" style="color:#f1c40f; font-weight:bold; font-size:1.2rem;">$ 0</div>
-                <hr style="opacity:0.2">
-                <div id="txt_label_b" style="margin-bottom:10px;">B 防禦型實質價值：</div>
-                <div id="txt_val_b" style="color:#f1c40f; font-weight:bold; font-size:1.2rem;">$ 0</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="inflation" class="tab-content">
-    <div class="card" style="max-width: 500px; margin: auto;">
-        <h2>通膨下的『實質購買力』</h2>
-        <div class="input-group"><label>現在年齡 (歲)</label><input type="number" id="currentAge" placeholder="35"></div>
-        <div class="input-group"><label>退休年齡 (歲)</label><input type="number" id="retirementAge" placeholder="65"></div>
-        <div class="input-group"><label>預期每年通膨率 (%)</label><input type="number" id="infRate" value="3.0"></div>
-        <div class="input-group"><label>預期退休月生活費 (元)</label><input type="number" id="futureExpenses" placeholder="50000"></div>
-        <button class="main-btn" style="background-color:#27ae60;" onclick="calcInf()">開始換算</button>
-        <div id="inf_result" style="display:none; margin-top:20px; text-align:center; padding:15px; border:1px dashed #27ae60; border-radius:8px;">
-            <p id="timeSummary" style="color:#7f8c8d; font-size:0.9rem;"></p>
-            <p style="font-size:1.1rem;">退休時 <span id="resF" style="color:#e67e22; font-weight:bold;"></span> 元生活費<br>
-            約等於現在 <span id="resP" style="color:#e67e22; font-weight:bold; font-size:1.4rem;"></span> 元的購買力</p>
-        </div>
-    </div>
-</div>
-
-<script>
-    // 分頁切換邏輯
-    function openTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
-        document.getElementById('btn-' + tabName).classList.add('active');
-    }
-
-    [cite_start]// 退休計算邏輯 [cite: 38, 39, 40, 41, 42, 43]
-    let retirementChart = null;
-    function doCalculate() {
-        const p_start = (parseFloat(document.getElementById('p_in').value) || 0) * 10000;
-        const m_save = parseFloat(document.getElementById('m_in').value) || 0;
-        const r_a = (parseFloat(document.getElementById('r_in').value) || 0) / 100;
-        const y_total = parseInt(document.getElementById('y_in').value) || 0;
-        const inf_rate = (parseFloat(document.getElementById('inf_in').value) || 0) / 100;
-        const d_years = parseInt(document.getElementById('def_y_in').value) || 0;
-        const move_pct = (parseFloat(document.getElementById('mov_p_in').value) || 0) / 100;
-
-        let assetA = p_start, assetB = 0;
-        let h_a = [Math.round(assetA)], h_b = [0], labels = ['起始'];
-
-        for (let i = 1; i <= y_total; i++) {
-            [cite_start]assetA = (assetA + (m_save * 12)) * (1 + r_a); [cite: 40]
-            if (i > (y_total - d_years)) {
-                [cite_start]let moveAmount = assetA * move_pct; [cite: 41]
-                [cite_start]assetA -= moveAmount; assetB += moveAmount; [cite: 42]
-            }
-            [cite_start]labels.push('第' + i + '年'); h_a.push(Math.round(assetA)); h_b.push(Math.round(assetB)); [cite: 43]
-        }
-
-        [cite_start]document.getElementById('out_a').innerText = `$ ${Math.round(assetA).toLocaleString()}`; [cite: 45]
-        [cite_start]document.getElementById('out_b').innerText = `$ ${Math.round(assetB).toLocaleString()}`; [cite: 46]
-        
-        [cite_start]const realA = assetA / Math.pow((1 + inf_rate), y_total); [cite: 46]
-        [cite_start]const realB = assetB / Math.pow((1 + inf_rate), y_total); [cite: 47]
-        [cite_start]document.getElementById('txt_val_a').innerText = `$ ${Math.round(realA).toLocaleString()}`; [cite: 48]
-        document.getElementById('txt_val_b').innerText = `$ ${Math.round(realB).toLocaleString()}`;
-
-        renderChart(labels, h_a, h_b);
-    }
-
-    [cite_start]// 通膨計算邏輯 [cite: 74, 75, 76, 78, 79]
-    function calcInf() {
-        const curAge = parseFloat(document.getElementById('currentAge').value);
-        const retAge = parseFloat(document.getElementById('retirementAge').value);
-        const rate = parseFloat(document.getElementById('infRate').value) / 100;
-        const fv = parseFloat(document.getElementById('futureExpenses').value);
-        
-        [cite_start]if (isNaN(curAge) || isNaN(retAge) || isNaN(fv)) return alert("請填寫正確數值"); [cite: 75]
-        [cite_start]const n = retAge - curAge; [cite: 76]
-        [cite_start]const pv = fv / Math.pow((1 + rate), n); [cite: 78]
-
-        [cite_start]document.getElementById('timeSummary').innerText = `距離退休還有 ${n} 年 (通膨 ${ (rate*100).toFixed(1) }%)`; [cite: 79]
-        [cite_start]document.getElementById('resF').innerText = fv.toLocaleString(); [cite: 80]
-        [cite_start]document.getElementById('resP').innerText = Math.round(pv).toLocaleString(); [cite: 80]
-        [cite_start]document.getElementById('inf_result').style.display = 'block'; [cite: 81]
-    }
-
-    function renderChart(labels, dataA, dataB) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        [cite_start]if (retirementChart) retirementChart.destroy(); [cite: 50]
-        retirementChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'A 成長型', data: dataA, backgroundColor: '#3498db', stack: 's1' },
-                    { label: 'B 防禦型', data: dataB, backgroundColor: '#27ae60', stack: 's1' }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true, ticks: { callback: v => v/10000 + '萬' } } } }
-        });
-    }
-
-    window.onload = doCalculate;
-</script>
-</body>
-</html>
