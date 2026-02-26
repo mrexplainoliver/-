@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>實質購買力計算機</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; line-height: 1.6; background-color: #f0f2f5; }
+        .container { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; margin-bottom: 25px; border-bottom: 2px solid #27ae60; padding-bottom: 10px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #34495e; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccd1d1; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        input:focus { border-color: #27ae60; outline: none; box-shadow: 0 0 5px rgba(39,174,96,0.3); }
+        button { width: 100%; padding: 12px; background-color: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 18px; margin-top: 10px; transition: 0.3s; }
+        button:hover { background-color: #219150; }
+        #result { margin-top: 25px; padding: 20px; background-color: #fafff9; border: 1px dashed #27ae60; border-radius: 8px; display: none; text-align: center; }
+        .highlight { font-weight: bold; color: #e67e22; font-size: 1.3em; }
+        .summary { color: #7f8c8d; font-size: 0.9em; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>通膨下的『實質購買力』</h2>
+    
+    <div class="input-group">
+        <label>1. 現在年齡 (歲)</label>
+        <input type="number" id="currentAge" placeholder="例如: 35">
+    </div>
+
+    <div class="input-group">
+        <label>2. 退休年齡 (歲)</label>
+        <input type="number" id="retirementAge" placeholder="例如: 65">
+    </div>
+
+    <div class="input-group">
+        <label>3. 預期-每年通膨率 (%)</label>
+        <input type="number" id="inflationRate" step="0.1" value="3.0">
+    </div>
+
+    <div class="input-group">
+        <label>4. 預期-退休每月生活費 (元)</label>
+        <input type="number" id="futureExpenses" placeholder="例如: 50,000">
+    </div>
+
+    <button onclick="calculate()">開始換算</button>
+
+    <div id="result">
+        <p class="summary" id="timeSummary"></p>
+        <p style="font-size: 1.1em;">
+            預期退休時 <span id="resFuture" class="highlight"></span> 元 的生活費<br>
+            約等於現在 <span id="resPresent" class="highlight"></span> 元 的購買力
+        </p>
+    </div>
+</div>
+
+<script>
+function calculate() {
+    const curAge = parseFloat(document.getElementById('currentAge').value);
+    const retAge = parseFloat(document.getElementById('retirementAge').value);
+    const rate = parseFloat(document.getElementById('inflationRate').value) / 100;
+    const fv = parseFloat(document.getElementById('futureExpenses').value);
+
+    if ([curAge, retAge, rate, fv].some(isNaN)) {
+        alert("請填寫所有欄位");
+        return;
+    }
+
+    const n = retAge - curAge;
+    if (n <= 0) {
+        alert("退休年齡必須大於現在年齡");
+        return;
+    }
+
+    const pv = fv / Math.pow((1 + rate), n);
+
+    // 顯示結果，加上千分位符號
+    document.getElementById('timeSummary').innerText = "距離退休還有 " + n + " 年 (預計通膨 " + (rate*100).toFixed(1) + "%)";
+    
+    // toLocaleString() 會自動加上逗號
+    document.getElementById('resFuture').innerText = fv.toLocaleString();
+    
+    // 購買力通常取整數或小數兩位，這裡設定為取到整數以方便閱讀
+    document.getElementById('resPresent').innerText = Math.round(pv).toLocaleString();
+    
+    document.getElementById('result').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
