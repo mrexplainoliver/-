@@ -44,3 +44,78 @@
             <div class="res-card" style="background:#3498db;">A.成長型資產：<div id="out_a">$ 0</div></div>
             <div class="res-card" style="background:#27ae60;">B.防禦型資產：<div id="out_b">$ 0</div></div>
         </div>
+        <div>
+            <div class="card" style="height:300px;"><canvas id="mainChart"></canvas></div>
+            <div class="power-card">
+                <div style="border-bottom:1px solid #5d6d7e; padding-bottom:5px; margin-bottom:10px; color:#f1c40f;">實質購買力 (換算成現在)</div>
+                <div>A資產實質價值：<div id="txt_val_a" class="power-val">$ 0</div></div>
+                <div style="margin-top:10px;">B資產實質價值：<div id="txt_val_b" class="power-val">$ 0</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="inflation" class="tab-content">
+    <div class="card" style="max-width:500px; margin:auto;">
+        <div class="input-group"><label>現在年齡</label><input type="number" id="curA" value="35"></div>
+        <div class="input-group"><label>退休年齡</label><input type="number" id="retA" value="65"></div>
+        <div class="input-group"><label>通膨率 (%)</label><input type="number" id="infR" value="3"></div>
+        <div class="input-group"><label>預期退休月費 (元)</label><input type="number" id="futE" value="50000"></div>
+        <button class="main-btn" style="background:#27ae60;" onclick="calcInf()">開始換算</button>
+        <div id="inf_res" style="display:none; margin-top:20px; text-align:center; padding:15px; border:2px dashed #27ae60; border-radius:10px;">
+            <div id="resP" style="color:#e67e22; font-size:1.6rem; font-weight:bold;">$ 0</div>
+            <div style="color:#7f8c8d; margin-top:5px;">約等於現在的購買力</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let myChart = null;
+
+    function openTab(name) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+        document.getElementById(name).classList.add('active');
+        document.getElementById('btn-' + name).classList.add('active');
+    }
+
+    function doCalculate() {
+        const p = (parseFloat(document.getElementById('p_in').value) || 0) * 10000;
+        const m = parseFloat(document.getElementById('m_in').value) || 0;
+        const r = (parseFloat(document.getElementById('r_in').value) || 0) / 100;
+        const y = parseInt(document.getElementById('y_in').value) || 0;
+        const inf = (parseFloat(document.getElementById('inf_in').value) || 0) / 100;
+
+        let a = p, labels = ['起始'], dataA = [Math.round(a)];
+        for(let i=1; i<=y; i++) {
+            a = (a + m*12) * (1 + r);
+            labels.push('第'+i+'年'); dataA.push(Math.round(a));
+        }
+
+        document.getElementById('out_a').innerText = '$ ' + Math.round(a).toLocaleString();
+        const rv = a / Math.pow(1 + inf, y);
+        document.getElementById('txt_val_a').innerText = '$ ' + Math.round(rv).toLocaleString();
+
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ label: '資產總額', data: dataA, borderColor: '#3498db', fill: true, backgroundColor: 'rgba(52, 152, 219, 0.1)' }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    function calcInf() {
+        const n = (parseFloat(document.getElementById('retA').value) - parseFloat(document.getElementById('curA').value));
+        const f = parseFloat(document.getElementById('futE').value);
+        const r = parseFloat(document.getElementById('infR').value) / 100;
+        if(n <= 0) return alert("退休年齡需大於現在年齡");
+        const p = f / Math.pow(1 + r, n);
+        document.getElementById('resP').innerText = '$ ' + Math.round(p).toLocaleString();
+        document.getElementById('inf_res').style.display = 'block';
+    }
+
+    window.onload = doCalculate;
+</script>
+</body>
+</html>
