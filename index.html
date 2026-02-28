@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>理財工具箱-精簡專業版</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #27ae60; --bg: #f0f2f5; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 12px; line-height: 1.5; }
+        .section-title { background: var(--primary); color: white; padding: 12px; border-radius: 8px 8px 0 0; font-weight: bold; text-align: center; margin-top: 20px; }
+        .card { background: white; padding: 15px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 15px; box-sizing: border-box; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-weight: bold; color: #34495e; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccd1d1; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        
+        .run-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .run-btn:active { transform: scale(0.98); background: #1a252f; }
+
+        /* 退休試算結果 */
+        .res-card { margin-top: 10px; padding: 12px; border-radius: 8px; color: white; text-align: center; }
+        .res-val { display: block; font-size: 1.3rem; font-weight: bold; }
+
+        /* 深色分析卡片 (紅色圈起來的字體調整) */
+        .power-card { background: #34495e; color: white; padding: 15px; border-radius: 10px; margin-top: 15px; word-wrap: break-word; }
+        .power-title { color: #f1c40f; font-weight: bold; border-bottom: 1px solid #5d6d7e; padding-bottom: 8px; margin-bottom: 12px; text-align: center; }
+        .power-item { margin-bottom: 12px; }
+        .power-label { color: #bdc3c7; font-size: 14px; margin-bottom: 4px; line-height: 1.3; }
+        .power-num { color: #f1c40f; font-weight: bold; font-size: 1.3rem; display: block; }
+
+        /* 通膨結果顯示框 */
+        #ires_box { display:none; margin-top:15px; text-align:center; padding:15px; border:2px dashed #27ae60; border-radius:10px; background: #f9fdf9; }
+        .desc-text { color: #2c3e50; font-size: 15px; margin: 8px 0; line-height: 1.4; }
+        .highlight-num { color: #e67e22; font-weight: bold; font-size: 1.3rem; display: inline-block; }
+        
+        hr { border: 0; border-top: 2px dashed #ccc; margin: 30px 0; }
+        canvas { max-width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="section-title">📊 綜合退休試算</div>
+    <div class="card">
+        <div class="input-group"><label>初始本金 (萬元)</label><input type="number" id="p" value="100"></div>
+        <div class="input-group"><label>每月存入 (元)</label><input type="number" id="m" value="10000"></div>
+        <div class="input-group"><label>年報酬率 (%)</label><input type="number" id="r" value="8"></div>
+        <div class="input-group"><label>距離退休時間 (年)</label><input type="number" id="y" value="30"></div>
+        <div class="input-group" style="background: #fff3e0; padding: 8px; border-radius: 6px;"><label>預期年通膨率 (%)</label><input type="number" id="inf" value="3"></div>
+        
+        <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 5px solid var(--accent);">
+            <label>退休前幾年開始轉入防禦型</label><input type="number" id="dy" value="5">
+            <label style="margin-top:8px;">每年轉移比例 (%)</label><input type="number" id="mp" value="5">
+        </div>
+
+        <button class="run-btn" onclick="calRet()">執行退休計算</button>
+        
+        <div class="res-card" style="background:#3498db;">A.成長型資產 (名目總額)<span id="oa" class="res-val">$ 0</span></div>
+        <div class="res-card" style="background:#27ae60;">B.防禦型資產 (名目總額)<span id="ob" class="res-val">$ 0</span></div>
+        
+        <div style="height:280px; margin: 20px 0;"><canvas id="chart"></canvas></div>
+        
+        <div class="power-card">
+            <div class="power-title">實質購買力分析 (折現)</div>
+            <div class="power-item">
+                <div id="label_va" class="power-label">A 資產實質價值：</div>
+                <span id="va" class="power-num">$ 0</span>
+            </div>
+            <div class="power-item" style="margin-bottom:0;">
+                <div id="label_vb" class="power-label">B 資產實質價值：</div>
+                <span id="vb" class="power-num">$ 0</span>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="section-title">📉 通膨購買力換算</div>
+    <div class="card">
+        <div class="input-group"><label>距離退休還有幾年？</label><input type="number" id="remainY" value="30"></div>
+        <div class="input-group"><label>預期年通膨率 (%)</label><input type="number" id="ir" value="3"></div>
+        <div class="input-group"><label>預期退休月生活費 (元)</label><input type="number" id="fe" value="50000"></div>
+        <button class="run-btn" style="background:#27ae60;" onclick="calInf()">開始換算</button>
+        
+        <div id="ires_box">
+            <div class="desc-text">
+                預期退休時 <span id="resF" class="highlight-num"></span> 元 的生活費
+            </div>
+            <div class="desc-text">
+                約等於現在 <span id="resP" class="highlight-num" style="color: #d35400;"></span> 元 的購買力
+            </div>
+        </div>
+    </div>
+
+<script>
+    let myChart = null;
+
+    function calRet() {
+        const p = (parseFloat(document.getElementById('p').value) || 0) * 10000;
+        const m = parseFloat(document.getElementById('m').value) || 0;
+        const r = (parseFloat(document.getElementById('r').value) || 0) / 100;
+        const y = parseInt(document.getElementById('y').value) || 0;
+        const inf = (parseFloat(document.getElementById('inf').value) || 0) / 100;
+        const dy = parseInt(document.getElementById('dy').value) || 0;
+        const mp = (parseFloat(document.getElementById('mp').value) || 0) / 100;
+
+        let assetA = p, assetB = 0;
+        let la = ['起'], da = [Math.round(p)], db = [0];
+
+        for (let i = 1; i <= y; i++) {
+            assetA = (assetA + m * 12) * (1 + r);
+            if (i > (y - dy)) {
+                let move = assetA * mp;
+                assetA -= move; assetB += move;
+            }
+            la.push('年' + i); da.push(Math.round(assetA)); db.push(Math.round(assetB));
+        }
+
+        document.getElementById('oa').innerText = '$' + Math.round(assetA).toLocaleString();
+        document.getElementById('ob').innerText = '$' + Math.round(assetB).toLocaleString();
+        
+        const realA = assetA / Math.pow(1 + inf, y);
+        const realB = assetB / Math.pow(1 + inf, y);
+
+        document.getElementById('label_va').innerText = `${y}年後 A資產 $${Math.round(assetA).toLocaleString()} ≒ 現在：`;
+        document.getElementById('va').innerText = '$' + Math.round(realA).toLocaleString();
+        document.getElementById('label_vb').innerText = `${y}年後 B資產 $${Math.round(assetB).toLocaleString()} ≒ 現在：`;
+        document.getElementById('vb').innerText = '$' + Math.round(realB).toLocaleString();
+
+        const ctx = document.getElementById('chart').getContext('2d');
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: la, datasets: [
+                { label: 'A成長型', data: da, backgroundColor: '#3498db', stack: 's' },
+                { label: 'B防禦型', data: db, backgroundColor: '#27ae60', stack: 's' }
+            ]},
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => v/10000 + '萬' } } }
+            }
+        });
+    }
+
+    function calInf() {
+        const n = parseFloat(document.getElementById('remainY').value);
+        const fe = parseFloat(document.getElementById('fe').value);
+        const ir = parseFloat(document.getElementById('ir').value) / 100;
+
+        if(n < 0) { alert("請輸入正確年數"); return; }
+        const pv = fe / Math.pow(1 + ir, n);
+
+        document.getElementById('resF').innerText = Math.round(fe).toLocaleString();
+        document.getElementById('resP').innerText = Math.round(pv).toLocaleString();
+        document.getElementById('ires_box').style.display = 'block';
+    }
+    window.onload = calRet;
+</script>
+</body>
+</html>
